@@ -2,7 +2,8 @@ package model;
 
 import exceptions.InsufficientDataException;
 
-import java.util.Scanner;
+import java.util.HashMap;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,18 +41,23 @@ public class Contact {
         return sex;
     }
 
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
     @Override
     public String toString() {
-        return String.format("%s %s %s %s", fullName, dateOfBirth, phoneNumber, sex);
+        return String.format("%s %s %s %s", getFullName(), getDateOfBirth(), getPhoneNumber(), getSex());
     }
 
     public void parseContact(String inputData) {
 
-        Scanner sc = new Scanner(System.in);
+        // Определяем паттерны тех или иных данных
         Pattern phoneNumberPattern = Pattern.compile("\\+?\\d+");
         Pattern dateOfBirthPattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{4}");
         Pattern genderPattern = Pattern.compile("[MF]");
 
+        //ищем по паттернам данные, удаляя уже найденное из поиска
         Matcher matcher = genderPattern.matcher(inputData);
         String parsedSex = "";
         if (matcher.find()) {
@@ -73,26 +79,33 @@ public class Contact {
             inputData = matcher.replaceFirst("");
         }
 
-        String parsedFullName = inputData;
-        parsedFullName = parsedFullName.trim();
+        // после всего этого остаётся только ФИО
+        String parsedFullName = inputData.trim();
 
+        //проверка на "пустоты"
+        List values = List.of(parsedFullName, parsedDateOfBirth, parsedPhoneNumber, parsedSex);
+        validate(values);
+
+
+        // Заполняем данные в контакт
         setFullName(parsedFullName);
         setDateOfBirth(parsedDateOfBirth);
         setPhoneNumber(parsedPhoneNumber);
         setSex(parsedSex);
     }
 
-    public Contact(String fullName, String dateOfBirth, int phoneNumber, String sex) {
-        this.fullName = fullName;
-        this.dateOfBirth = dateOfBirth;
-        this.phoneNumber = phoneNumber;
-        this.sex = sex;
-    }
+    private void validate(List inputValues){
+        HashMap<String, String> data = new HashMap<>();
+        List<String> keys = List.of("ФИО", "дата рождения", "номер телефона", "пол");
 
+        for (int i = 0; i < keys.size(); i++)
+            data.put(keys.get(i), inputValues.get(i).toString());
+
+        data.forEach((k, v) -> {
+           if (v.isEmpty() || v.equals("0"))
+               throw new InsufficientDataException("Не хватает данных! ");
+        });
+    }
     public Contact(){}
-
-    public void setSex(String sex) {
-        this.sex = sex;
-    }
 
 }
